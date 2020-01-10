@@ -54,7 +54,7 @@ class Cache {
     var newlineChar = getNewlineChar(contents);
     var offset = 0;
     var lineNumber = 0;
-    var result = new SplayTreeMap();
+    var result = new SplayTreeMap<int, int>();
 
     if (contents.length > 0) {
       do {

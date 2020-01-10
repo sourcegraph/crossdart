@@ -231,7 +231,8 @@ class HtmlPackageGenerator {
       if (a is Map && b is! Map) {
         return -1;
       } else if (a is! Map && b is! Map) {
-        return a.compareTo(b);
+        // hack: I used hashCode because it's Comparable, arbitrary Objects are not
+        return a.hashCode.compareTo(b.hashCode);
       } else if (a is Map && b is Map) {
         return a.keys.first.compareTo(b.keys.first);
       } else {
@@ -264,7 +265,7 @@ class HtmlPackageGenerator {
   Iterable<Object> _getFileTreeMap(Package package) {
     return package.paths.fold([], (memo, path) {
       var parts = path.split("/");
-      var cursor = memo;
+      List cursor = memo;
       for (var i = 0; i < parts.length; i += 1) {
         var part = parts[i];
         if (i == parts.length - 1) {

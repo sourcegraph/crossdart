@@ -154,9 +154,12 @@ Future<Package> buildFromFileSystem(Config config, PackageInfo packageInfo) {
 }
 
 Future<Sdk> buildSdkFromFileSystem(Config config, PackageInfo packageInfo) async {
-  String lib = packageInfo.getDirectoryInPubCache(config);
+  // TODO This throws an exception, need to fix. Hard-code it for now.
+  // String lib = packageInfo.getDirectoryInPubCache(config);
+  String lib = "/usr/local/Cellar/dart/2.7.0";
   var source = PackageSource.SDK;
 
+  print("Opening dir $lib (TODO un-hard-code this, see lib/src/package.dart)");
   var paths = new Directory(lib).listSync(recursive: true).where(_isDartFile).map((file) {
     return file.path.replaceAll(lib, "").replaceFirst(new RegExp(r"^/"), "");
   });

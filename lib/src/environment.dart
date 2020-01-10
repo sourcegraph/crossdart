@@ -32,7 +32,7 @@ Future<Environment> buildEnvironment(Config config) async {
 
   var sdk = await buildSdkFromFileSystem(config, sdkPackageInfo);
 
-  var customPackages = [];
+  List<CustomPackage> customPackages = [];
   Map<String, Uri> packagesDiscovery;
 
   Package package;
@@ -60,7 +60,7 @@ Future<Environment> buildEnvironment(Config config) async {
     packages.add(package);
   }
 
-  var packagesByFiles = packages.fold({}, (Map<String, Package> memo, Package package) {
+  var packagesByFiles = packages.fold<Map<String, Package>>({}, (Map<String, Package> memo, Package package) {
     package.absolutePaths.forEach((file) {
       memo[file] = package;
     });

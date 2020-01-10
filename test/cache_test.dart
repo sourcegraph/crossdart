@@ -1,6 +1,6 @@
 library crossdart.test.cache;
 
-import 'package:unittest/unittest.dart';
+import 'package:test/test.dart';
 import 'package:crossdart/src/cache.dart';
 
 void main() => group("Cache", () {

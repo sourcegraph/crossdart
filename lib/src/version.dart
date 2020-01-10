@@ -7,11 +7,7 @@ class Version implements ps.Version {
   Version._(this.string);
 
   static Version parse(String string) {
-    try {
-      return new ps.Version.parse(string);
-    } on FormatException catch (_, __) {
-      return new Version._(string);
-    }
+    return new Version._(string);
   }
 
   String toString() {
@@ -55,6 +51,9 @@ class Version implements ps.Version {
   bool get isPreRelease => false;
 
   @override
+  bool get isFirstPreRelease => false;
+
+  @override
   ps.Version get nextMajor => this;
 
   @override
@@ -65,6 +64,9 @@ class Version implements ps.Version {
 
   @override
   ps.Version get nextBreaking => this;
+
+  @override
+  ps.Version get firstPreRelease => this;
 
   @override
   bool allows(ps.Version other) => true;
@@ -82,7 +84,10 @@ class Version implements ps.Version {
   ps.VersionConstraint union(ps.VersionConstraint other) => null;
 
   @override
-  int compareTo(ps.Version other) {
+  ps.VersionConstraint difference(ps.VersionConstraint other) => null;
+
+  @override
+  int compareTo(ps.VersionRange other) {
     return this.toString().compareTo(other.toString());
   }
 

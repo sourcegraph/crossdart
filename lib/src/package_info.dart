@@ -92,11 +92,11 @@ class PackageInfo implements Comparable<PackageInfo> {
   }
 
   String toJson() {
-    return JSON.encode(toMap());
+    return jsonEncode(toMap());
   }
 
   factory PackageInfo.fromJson(String json) {
-    final map = JSON.decode(json);
+    final map = jsonDecode(json);
     return new PackageInfo(map["name"], Version.parse(map["version"]));
   }
 

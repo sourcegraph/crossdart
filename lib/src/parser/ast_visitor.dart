@@ -76,36 +76,48 @@ class ASTVisitor extends GeneralizingAstVisitor {
       }
     } else {
       try {
-        Element element = node.bestElement;
+        Element element = node.staticElement;
+        Element decl; // declaration of element
+
+        AstNode toAstNode(Element element) {
+          var session = element.session;
+          var parsedLib = session.getParsedLibraryByElement(element.library);
+          var declaration = parsedLib.getElementDeclaration(element);
+          if (declaration != null) {
+            return declaration.node;
+          } else {
+            return null;
+          }
+        }
 
         //print("Node ${node}, type: ${node.runtimeType}, bestElement - ${node.bestElement}, bestElementType - ${node.bestElement.runtimeType}, nodeType - ${node.bestElement.node.runtimeType}");
 
         if (element != null && element.library != null) {
           AstNode elementNode;
-          if (element.computeNode() == null && element is PropertyAccessorElement) {
-            elementNode = element.variable.computeNode();
-          } else if (element.computeNode() == null && element is FieldFormalParameterElement) {
-            elementNode = element.field.computeNode();
+          if (toAstNode(element) == null && element is PropertyAccessorElement) {
+            decl = element.variable;
+          } else if (toAstNode(element) == null && element is FieldFormalParameterElement) {
+            decl = element.field;
           } else {
-            elementNode = element.computeNode();
+            decl = element;
           }
+          elementNode = toAstNode(decl);
 
           if (elementNode is Declaration && !node.inDeclarationContext()) {
-            var reference = new e.Reference(new Location.fromEnvironment(_environment, _absolutePath), name: node.bestElement.displayName, offset: node.offset, end: node.end);
-            var declarationElement = elementNode.element;
-            var kind = _getEntityKind(declarationElement);
+            var reference = new e.Reference(new Location.fromEnvironment(_environment, _absolutePath), name: node.staticElement.displayName, offset: node.offset, end: node.end);
+            var kind = _getEntityKind(decl);
             var declarationToken = _getDeclarationToken(elementNode);
             if (kind == null) {
-              print("MISSING KIND! - ${declarationElement.runtimeType} - ${declarationElement.displayName}, ${declarationToken.offset}-${declarationToken.end}");
+              print("MISSING KIND! - ${decl.runtimeType} - ${decl.displayName}, ${declarationToken.offset}-${declarationToken.end}");
             }
 
             String contextName;
-            if (declarationElement is ClassMemberElement) {
-              contextName = declarationElement.enclosingElement.name;
+            if (decl is ClassMemberElement) {
+              contextName = decl.enclosingElement.name;
             }
 
-            var declaration = new e.Declaration(new Location.fromEnvironment(_environment, declarationElement.source.fullName),
-                name: declarationElement.displayName,
+            var declaration = new e.Declaration(new Location.fromEnvironment(_environment, decl.source.fullName),
+                name: decl.displayName,
                 contextName: contextName,
                 offset: declarationToken.offset,
                 end: declarationToken.end,

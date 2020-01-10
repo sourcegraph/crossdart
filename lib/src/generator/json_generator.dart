@@ -37,7 +37,7 @@ class JsonGenerator {
       }
     });
     _logger.info("Saving JSON output to ${file.path}");
-    file.writeStringSync(JSON.encode(result));
+    file.writeStringSync(jsonEncode(result));
   }
 
   Iterable<Map<String, Object>> _getReferencesValues(String pubspecLockPath, Set<Entity> entities, bool isSdk, bool isForGithub) {
@@ -47,7 +47,7 @@ class JsonGenerator {
     references.sort((a, b) => Comparable.compare(a.offset, b.offset));
     return references.map((reference) {
       var declaration = _parsedData.references[reference];
-      var value = {};
+      Map<String, Object> value = {};
 
       if (isForGithub) {
         value["line"] = reference.lineNumber + 1;
@@ -70,7 +70,7 @@ class JsonGenerator {
     declarations.sort((a, b) => Comparable.compare(a.offset, b.offset));
     return declarations.map((declaration) {
       var references = _parsedData.declarations[declaration];
-      var value = {
+      Map<String, Object> value = {
         "line": declaration.lineNumber + 1,
         "offset": declaration.lineOffset,
         "length": declaration.end - declaration.offset,
