@@ -9,6 +9,7 @@ import 'package:crossdart/src/config.dart';
 import 'package:crossdart/src/environment.dart';
 import 'package:path/path.dart' as p;
 
+/** A path to a file within a package. */
 class Location {
   final String path;
   final Package package;

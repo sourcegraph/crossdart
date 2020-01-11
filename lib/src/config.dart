@@ -8,7 +8,7 @@ import 'package:analyzer/src/generated/sdk.dart' show DartSdk;
 import 'package:package_config/discovery.dart' as packages_discovery;
 import 'dart:async';
 
-enum OutputFormat { JSON, HTML, GITHUB }
+enum OutputFormat { JSON, HTML, GITHUB, LSIF }
 
 class Config {
   final String dartSdk;

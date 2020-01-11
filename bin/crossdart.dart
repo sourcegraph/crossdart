@@ -8,6 +8,7 @@ import 'package:crossdart/src/args.dart';
 import 'package:crossdart/src/config.dart';
 import 'package:crossdart/src/environment.dart';
 import 'package:crossdart/src/generator/json_generator.dart';
+import 'package:crossdart/src/generator/lsif_generator.dart';
 import 'package:crossdart/src/logging.dart' as logging;
 import 'package:crossdart/src/parser.dart';
 import 'package:logging/logging.dart';
@@ -27,6 +28,7 @@ Future main(args) async {
     case "json": outputFormat = OutputFormat.JSON; break;
     case "github": outputFormat = OutputFormat.GITHUB; break;
     case "html": outputFormat = OutputFormat.HTML; break;
+    case "lsif": outputFormat = OutputFormat.LSIF; break;
     default: outputFormat = OutputFormat.GITHUB; break;
   }
 
@@ -43,10 +45,12 @@ Future main(args) async {
 
   var environment = await buildEnvironment(config);
   var parsedData = await new Parser(environment).parseProject();
-  if (config.outputFormat == OutputFormat.HTML) {
-    await new HtmlPackageGenerator(config, [environment.package], parsedData).generateProject();
-  } else {
-    new JsonGenerator(environment, parsedData).generate(isForGithub: config.outputFormat == OutputFormat.GITHUB);
+  switch (config.outputFormat) {
+    case OutputFormat.HTML: await new HtmlPackageGenerator(config, [environment.package], parsedData).generateProject(); break;
+    case OutputFormat.GITHUB: new JsonGenerator(environment, parsedData).generate(isForGithub: true); break;
+    case OutputFormat.JSON: new JsonGenerator(environment, parsedData).generate(isForGithub: false); break;
+    case OutputFormat.LSIF: await new LsifGenerator(environment, parsedData).generate(); break;
+    default: throw new Exception("unrecognized output format ${config.outputFormat}"); break;
   }
 
   exit(0);

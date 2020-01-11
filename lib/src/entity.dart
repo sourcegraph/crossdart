@@ -9,6 +9,7 @@ enum EntityKind {
   TOP_LEVEL_VARIABLE
 }
 
+/** A token in a file. */
 abstract class Entity {
   final Location location;
   final String name;
