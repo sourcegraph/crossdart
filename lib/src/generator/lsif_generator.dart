@@ -46,11 +46,22 @@ class LsifGenerator {
     var pubspecLockPath = path.join(_environment.config.input, "pubspec.lock");
     await withIOSink(file, (sink) async {
       var emit = mkEmit(sink);
-      await emit({"type": "vertex", "label": "document", "uri": 'lalala', "languageId": 'dart'});
-      await Future.forEach(_parsedData.files.entries, (MapEntry<String, Set<Entity>> entry) async {
+      await emit({
+        "type": "vertex",
+        "label": "document",
+        "uri": 'lalala',
+        "languageId": 'dart'
+      });
+      await Future.forEach(_parsedData.files.entries,
+          (MapEntry<String, Set<Entity>> entry) async {
         var absolutePath = entry.key;
         var entities = entry.value;
-        await emit({"type": "vertex", "label": "document", "uri": 'lalala', "languageId": 'dart'});
+        await emit({
+          "type": "vertex",
+          "label": "document",
+          "uri": 'lalala',
+          "languageId": 'dart'
+        });
         // String relativePath = _environment.package is Sdk ?
         //   entities.first.location.package.relativePath(absolutePath) :
         //   path.join("lib", entities.first.location.package.relativePath(absolutePath));
@@ -65,9 +76,11 @@ class LsifGenerator {
     _logger.info("Saved LSIF output to ${file.path}");
   }
 
-  Iterable<Map<String, Object>> _getReferencesValues(String pubspecLockPath, Set<Entity> entities, bool isSdk, bool isForGithub) {
+  Iterable<Map<String, Object>> _getReferencesValues(String pubspecLockPath,
+      Set<Entity> entities, bool isSdk, bool isForGithub) {
     var references = entities.where((e) {
-      return e is Reference && (isSdk ? e.location.package is Sdk : e.location.package is Project);
+      return e is Reference &&
+          (isSdk ? e.location.package is Sdk : e.location.package is Project);
     }).toList();
     references.sort((a, b) => Comparable.compare(a.offset, b.offset));
     return references.map((reference) {
@@ -78,19 +91,24 @@ class LsifGenerator {
         value["line"] = reference.lineNumber + 1;
         value["offset"] = reference.lineOffset;
         value["length"] = reference.end - reference.offset;
-        value["remotePath"] = declaration.location.githubRemotePath(declaration.lineNumber, pubspecLockPath, isSdk);
+        value["remotePath"] = declaration.location
+            .githubRemotePath(declaration.lineNumber, pubspecLockPath, isSdk);
       } else {
         value["offset"] = reference.offset;
         value["end"] = reference.end;
-        value["remotePath"] = declaration.location.crossdartRemotePath(declaration.lineNumber, pubspecLockPath, isSdk);
+        value["remotePath"] = declaration.location.crossdartRemotePath(
+            declaration.lineNumber, pubspecLockPath, isSdk);
       }
       return value;
     });
   }
 
-  Iterable<Map<String, Object>> _getDeclarationsValues(String pubspecLockPath, Set<Entity> entities, bool isSdk) {
+  Iterable<Map<String, Object>> _getDeclarationsValues(
+      String pubspecLockPath, Set<Entity> entities, bool isSdk) {
     var declarations = entities.where((e) {
-      return e is Declaration && (isSdk ? e.location.package is Sdk : e.location.package is Project) && e.offset != null;
+      return e is Declaration &&
+          (isSdk ? e.location.package is Sdk : e.location.package is Project) &&
+          e.offset != null;
     }).toList();
     declarations.sort((a, b) => Comparable.compare(a.offset, b.offset));
     return declarations.map((declaration) {
@@ -102,7 +120,8 @@ class LsifGenerator {
       };
       value["references"] = references.map((reference) {
         return {
-          "remotePath": reference.location.githubRemotePath(reference.lineNumber, pubspecLockPath, isSdk)
+          "remotePath": reference.location
+              .githubRemotePath(reference.lineNumber, pubspecLockPath, isSdk)
         };
       }).toList();
       return value;
