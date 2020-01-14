@@ -34,6 +34,72 @@ Future<String> Function(Map<String, Object>) mkEmit(IOSink sink) {
   };
 }
 
+Future<void> withinProject(Future<String> Function(Map<String, Object>) emit,
+    Future Function() inside) async {
+  await emit({
+    "data": 'project',
+    "type": 'vertex',
+    "label": 'event',
+    "kind": 'begin',
+    "scope": 'project',
+  });
+  await emit({
+    "type": 'vertex',
+    "label": 'project',
+    "kind": 'dart',
+  });
+  await inside();
+  await emit({
+    "data": 'project',
+    "type": 'vertex',
+    "label": 'event',
+    "kind": 'end',
+    "scope": 'project',
+  });
+}
+
+Future<void> withinDocuments(
+    Future<String> Function(Map<String, Object>) emit,
+    Iterable<String> documents,
+    Future<List<String>> Function(String) inside) async {
+  Map<String, String> docToID = {};
+  await Future.forEach(documents, (String doc) async {
+    docToID[doc] = await emit({
+      "type": 'vertex',
+      "label": 'document',
+      // TODO needs to be relative to project root
+      "uri": 'file:///' + doc,
+      "languageId": 'dart',
+    });
+    await emit({
+      "data": docToID[doc],
+      "type": 'vertex',
+      "label": 'event',
+      "kind": 'begin',
+      "scope": 'document',
+    });
+  });
+  Map<String, List<String>> docToRanges = {};
+  await Future.forEach(documents, (String doc) async {
+    docToRanges[doc] = await inside(doc);
+  });
+  await Future.forEach(documents, (String doc) async {
+    await emit({
+      "type": 'edge',
+      "label": 'contains',
+      "outV": docToID[doc],
+      "inVs": docToRanges[doc],
+    });
+    await emit({
+      "data": docToID[doc],
+      "type": 'vertex',
+      "label": 'event',
+      "kind": 'end',
+      "scope": 'document',
+    });
+  });
+}
+
 class LsifGenerator {
   final Environment _environment;
   final ParsedData _parsedData;
@@ -47,30 +113,38 @@ class LsifGenerator {
     await withIOSink(file, (sink) async {
       var emit = mkEmit(sink);
       await emit({
-        "type": "vertex",
-        "label": "document",
-        "uri": 'lalala',
-        "languageId": 'dart'
+        "id": 'meta',
+        "type": 'vertex',
+        "label": 'metaData',
+        "projectRoot": 'file:///',
+        "version": '0.4.0',
+        "positionEncoding": 'utf-16',
+        "toolInfo": {"name": 'crossdart', "args": [], "version": 'dev'}
       });
-      await Future.forEach(_parsedData.files.entries,
-          (MapEntry<String, Set<Entity>> entry) async {
-        var absolutePath = entry.key;
-        var entities = entry.value;
-        await emit({
-          "type": "vertex",
-          "label": "document",
-          "uri": 'lalala',
-          "languageId": 'dart'
+      await withinProject(emit, () async {
+        await withinDocuments(emit, _parsedData.files.keys, (String doc) async {
+          await Future.forEach(_parsedData.files.entries,
+              (MapEntry<String, Set<Entity>> entry) async {
+            var absolutePath = doc;
+            var entities = _parsedData.files[doc];
+            await emit({
+              "type": "vertex",
+              "label": "document",
+              "uri": 'lalala',
+              "languageId": 'dart'
+            });
+            // String relativePath = _environment.package is Sdk ?
+            //   entities.first.location.package.relativePath(absolutePath) :
+            //   path.join("lib", entities.first.location.package.relativePath(absolutePath));
+            // result[relativePath] = {
+            //   "references": _getReferencesValues(pubspecLockPath, entities, _environment.package is Sdk, isForGithub).toList()
+            // };
+            // if (isForGithub) {
+            //   result[relativePath]["declarations"] = _getDeclarationsValues(pubspecLockPath, entities, _environment.package is Sdk).toList();
+            // }
+          });
+          return [];
         });
-        // String relativePath = _environment.package is Sdk ?
-        //   entities.first.location.package.relativePath(absolutePath) :
-        //   path.join("lib", entities.first.location.package.relativePath(absolutePath));
-        // result[relativePath] = {
-        //   "references": _getReferencesValues(pubspecLockPath, entities, _environment.package is Sdk, isForGithub).toList()
-        // };
-        // if (isForGithub) {
-        //   result[relativePath]["declarations"] = _getDeclarationsValues(pubspecLockPath, entities, _environment.package is Sdk).toList();
-        // }
       });
     });
     _logger.info("Saved LSIF output to ${file.path}");
