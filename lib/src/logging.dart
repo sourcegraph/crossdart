@@ -16,7 +16,9 @@ void initialize([int index]) {
       message += "\n${record.error}\n${record.stackTrace}";
     }
     return message;
-  };
+  }
+
+  ;
 
   Logger.root.onRecord.listen((record) {
     if (record.loggerName != "ConnectionPool") {

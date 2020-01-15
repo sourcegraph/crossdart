@@ -1,5 +1,4 @@
 #!/usr/bin/env dart
-
 library parse_and_generate_for_project;
 
 import 'dart:io';
@@ -25,11 +24,21 @@ Future main(args) async {
 
   OutputFormat outputFormat;
   switch (results[Config.OUTPUT_FORMAT]) {
-    case "json": outputFormat = OutputFormat.JSON; break;
-    case "github": outputFormat = OutputFormat.GITHUB; break;
-    case "html": outputFormat = OutputFormat.HTML; break;
-    case "lsif": outputFormat = OutputFormat.LSIF; break;
-    default: outputFormat = OutputFormat.GITHUB; break;
+    case "json":
+      outputFormat = OutputFormat.JSON;
+      break;
+    case "github":
+      outputFormat = OutputFormat.GITHUB;
+      break;
+    case "html":
+      outputFormat = OutputFormat.HTML;
+      break;
+    case "lsif":
+      outputFormat = OutputFormat.LSIF;
+      break;
+    default:
+      outputFormat = OutputFormat.GITHUB;
+      break;
   }
 
   var input = new File(results[Config.INPUT]).resolveSymbolicLinksSync();
@@ -46,11 +55,22 @@ Future main(args) async {
   var environment = await buildEnvironment(config);
   var parsedData = await new Parser(environment).parseProject();
   switch (config.outputFormat) {
-    case OutputFormat.HTML: await new HtmlPackageGenerator(config, [environment.package], parsedData).generateProject(); break;
-    case OutputFormat.GITHUB: new JsonGenerator(environment, parsedData).generate(isForGithub: true); break;
-    case OutputFormat.JSON: new JsonGenerator(environment, parsedData).generate(isForGithub: false); break;
-    case OutputFormat.LSIF: await new LsifGenerator(environment, parsedData).generate(); break;
-    default: throw new Exception("unrecognized output format ${config.outputFormat}"); break;
+    case OutputFormat.HTML:
+      await new HtmlPackageGenerator(config, [environment.package], parsedData)
+          .generateProject();
+      break;
+    case OutputFormat.GITHUB:
+      new JsonGenerator(environment, parsedData).generate(isForGithub: true);
+      break;
+    case OutputFormat.JSON:
+      new JsonGenerator(environment, parsedData).generate(isForGithub: false);
+      break;
+    case OutputFormat.LSIF:
+      await new LsifGenerator(environment, parsedData).generate();
+      break;
+    default:
+      throw new Exception("unrecognized output format ${config.outputFormat}");
+      break;
   }
 
   exit(0);

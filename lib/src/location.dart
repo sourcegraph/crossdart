@@ -17,37 +17,45 @@ class Location {
 
   Location(this.config, this.package, this.path);
 
-  factory Location.fromEnvironment(Environment environment, String absolutePath) {
+  factory Location.fromEnvironment(
+      Environment environment, String absolutePath) {
     var package = Package.fromAbsolutePath(environment, absolutePath);
-    return new Location(environment.config, package, package.relativePath(absolutePath));
+    return new Location(
+        environment.config, package, package.relativePath(absolutePath));
   }
 
   int get hashCode => hash([path, package]);
 
-  bool operator ==(other) => other is Location
-      && path == other.path
-      && package == other.package;
+  bool operator ==(other) =>
+      other is Location && path == other.path && package == other.package;
 
   String get file {
     return p.join(package.lib, path);
   }
 
   String get htmlPath {
-    return "${config.urlPrefix}/" + p.join(package.name, _versionPart, "${path}.html");
+    return "${config.urlPrefix}/" +
+        p.join(package.name, _versionPart, "${path}.html");
   }
 
   String _remotePath(int lineNumber, String pubspecLockPath, bool isSdk) {
-    if (package is Project || package is Sdk || package.source == PackageSource.HOSTED) {
-      var result = p.join(config.urlPrefix, package.name, package.version.toString(), "${path}.html");
+    if (package is Project ||
+        package is Sdk ||
+        package.source == PackageSource.HOSTED) {
+      var result = p.join(config.urlPrefix, package.name,
+          package.version.toString(), "${path}.html");
       if (lineNumber != null) {
         result += "#line-${lineNumber + 1}";
       }
       return result;
-    } else if (package is CustomPackage && package.source == PackageSource.GIT && pubspecLockPath != null) {
+    } else if (package is CustomPackage &&
+        package.source == PackageSource.GIT &&
+        pubspecLockPath != null) {
       var pubspecLockFile = new File(pubspecLockPath);
       if (pubspecLockFile.existsSync()) {
         var yaml = loadYaml(pubspecLockFile.readAsStringSync());
-        String ref = yaml["packages"][package.name]["description"]["resolved-ref"];
+        String ref =
+            yaml["packages"][package.name]["description"]["resolved-ref"];
         String url = yaml["packages"][package.name]["description"]["url"];
         url = url.replaceAll("git@github.com:", "https://github.com/");
         url = url.replaceAll(new RegExp(r".git$"), "");
@@ -64,7 +72,8 @@ class Location {
     }
   }
 
-  String crossdartRemotePath(int lineNumber, String pubspecLockPath, bool isSdk) {
+  String crossdartRemotePath(
+      int lineNumber, String pubspecLockPath, bool isSdk) {
     return _remotePath(lineNumber, pubspecLockPath, isSdk);
   }
 
@@ -89,7 +98,8 @@ class Location {
     return result;
   }
 
-  String get _versionPart => package.version != null ? package.version.toString() : "unknown";
+  String get _versionPart =>
+      package.version != null ? package.version.toString() : "unknown";
 
   String toString() {
     return "<Location ${toMap()}>";

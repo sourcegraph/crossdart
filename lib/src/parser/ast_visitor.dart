@@ -38,27 +38,54 @@ class ASTVisitor extends GeneralizingAstVisitor {
     try {
       var parent = node.parent;
       if (parent is PartDirective) {
-        var reference = new e.Reference(new Location.fromEnvironment(_environment, _absolutePath), name: node.toString(), offset: node.offset, end: node.end);
+        var reference = new e.Reference(
+            new Location.fromEnvironment(_environment, _absolutePath),
+            name: node.toString(),
+            offset: node.offset,
+            end: node.end);
         var path;
         if ((parent as PartDirective).element != null) {
           path = (parent as PartDirective).element.source.uri.path;
         } else {
           path = (parent as PartDirective).source.uri.path;
         }
-        var declaration = new e.Import(new Location.fromEnvironment(_environment, path));
+        var declaration =
+            new e.Import(new Location.fromEnvironment(_environment, path));
         _addReferenceAndDeclaration(reference, declaration);
-      } else if (parent is ImportDirective && (parent as ImportDirective).element != null) {
-        var reference = new e.Reference(new Location.fromEnvironment(_environment, _absolutePath), name: node.toString(), offset: node.offset, end: node.end);
-        var fullName = ((parent as ImportDirective).element as ImportElement).importedLibrary.definingCompilationUnit.source.fullName;
-        var declaration = new e.Import(new Location.fromEnvironment(_environment, fullName));
+      } else if (parent is ImportDirective &&
+          (parent as ImportDirective).element != null) {
+        var reference = new e.Reference(
+            new Location.fromEnvironment(_environment, _absolutePath),
+            name: node.toString(),
+            offset: node.offset,
+            end: node.end);
+        var fullName = ((parent as ImportDirective).element as ImportElement)
+            .importedLibrary
+            .definingCompilationUnit
+            .source
+            .fullName;
+        var declaration =
+            new e.Import(new Location.fromEnvironment(_environment, fullName));
         _addReferenceAndDeclaration(reference, declaration);
-      } else if (parent is ExportDirective && (parent as ExportDirective).element != null) {
-        var reference = new e.Reference(new Location.fromEnvironment(_environment, _absolutePath), name: node.toString(), offset: node.offset, end: node.end);
-        var declaration = new e.Import(new Location.fromEnvironment(_environment, ((parent as ExportDirective).element as ExportElement).exportedLibrary.definingCompilationUnit.source.fullName));
+      } else if (parent is ExportDirective &&
+          (parent as ExportDirective).element != null) {
+        var reference = new e.Reference(
+            new Location.fromEnvironment(_environment, _absolutePath),
+            name: node.toString(),
+            offset: node.offset,
+            end: node.end);
+        var declaration = new e.Import(new Location.fromEnvironment(
+            _environment,
+            ((parent as ExportDirective).element as ExportElement)
+                .exportedLibrary
+                .definingCompilationUnit
+                .source
+                .fullName));
         _addReferenceAndDeclaration(reference, declaration);
       }
-    } catch(error, stackTrace) {
-      _logger.severe("Error parsing simple string literal $node", error, stackTrace);
+    } catch (error, stackTrace) {
+      _logger.severe(
+          "Error parsing simple string literal $node", error, stackTrace);
     }
   }
 
@@ -68,10 +95,15 @@ class ASTVisitor extends GeneralizingAstVisitor {
     if (node.parent != null && node.parent.parent is PartOfDirective) {
       try {
         PartOfDirective partOfNode = node.parent.parent;
-        var reference = new e.Reference(new Location.fromEnvironment(_environment, _absolutePath), name: node.toString(), offset: node.offset, end: node.end);
-        var declaration = new e.Import(new Location.fromEnvironment(_environment, partOfNode.element.source.fullName));
+        var reference = new e.Reference(
+            new Location.fromEnvironment(_environment, _absolutePath),
+            name: node.toString(),
+            offset: node.offset,
+            end: node.end);
+        var declaration = new e.Import(new Location.fromEnvironment(
+            _environment, partOfNode.element.source.fullName));
         _addReferenceAndDeclaration(reference, declaration);
-      } catch(error, stackTrace) {
+      } catch (error, stackTrace) {
         _logger.severe("Error parsing 'part of' node $node", error, stackTrace);
       }
     } else {
@@ -94,9 +126,11 @@ class ASTVisitor extends GeneralizingAstVisitor {
 
         if (element != null && element.library != null) {
           AstNode elementNode;
-          if (toAstNode(element) == null && element is PropertyAccessorElement) {
+          if (toAstNode(element) == null &&
+              element is PropertyAccessorElement) {
             decl = element.variable;
-          } else if (toAstNode(element) == null && element is FieldFormalParameterElement) {
+          } else if (toAstNode(element) == null &&
+              element is FieldFormalParameterElement) {
             decl = element.field;
           } else {
             decl = element;
@@ -104,11 +138,16 @@ class ASTVisitor extends GeneralizingAstVisitor {
           elementNode = toAstNode(decl);
 
           if (elementNode is Declaration && !node.inDeclarationContext()) {
-            var reference = new e.Reference(new Location.fromEnvironment(_environment, _absolutePath), name: node.staticElement.displayName, offset: node.offset, end: node.end);
+            var reference = new e.Reference(
+                new Location.fromEnvironment(_environment, _absolutePath),
+                name: node.staticElement.displayName,
+                offset: node.offset,
+                end: node.end);
             var kind = _getEntityKind(decl);
             var declarationToken = _getDeclarationToken(elementNode);
             if (kind == null) {
-              print("MISSING KIND! - ${decl.runtimeType} - ${decl.displayName}, ${declarationToken.offset}-${declarationToken.end}");
+              print(
+                  "MISSING KIND! - ${decl.runtimeType} - ${decl.displayName}, ${declarationToken.offset}-${declarationToken.end}");
             }
 
             String contextName;
@@ -116,7 +155,9 @@ class ASTVisitor extends GeneralizingAstVisitor {
               contextName = decl.enclosingElement.name;
             }
 
-            var declaration = new e.Declaration(new Location.fromEnvironment(_environment, decl.source.fullName),
+            var declaration = new e.Declaration(
+                new Location.fromEnvironment(
+                    _environment, decl.source.fullName),
                 name: decl.displayName,
                 contextName: contextName,
                 offset: declarationToken.offset,
@@ -127,8 +168,9 @@ class ASTVisitor extends GeneralizingAstVisitor {
             _addReferenceAndDeclaration(reference, declaration);
           }
         }
-      } catch(error, stackTrace) {
-        _logger.severe("Error parsing a reference/declaration $node", error, stackTrace);
+      } catch (error, stackTrace) {
+        _logger.severe(
+            "Error parsing a reference/declaration $node", error, stackTrace);
       }
     }
   }
@@ -158,15 +200,16 @@ class ASTVisitor extends GeneralizingAstVisitor {
   }
 
   AstNode _getDeclarationToken(dynamic node) {
-    if ((node is ClassDeclaration
-        || node is MethodDeclaration
-        || node is VariableDeclaration
-        || node is FunctionDeclaration
-        || node is ConstructorDeclaration
-        || node is EnumDeclaration
-        || node is EnumConstantDeclaration
-        || node is FunctionTypeAlias
-        || node is ClassTypeAlias) && node.name != null) {
+    if ((node is ClassDeclaration ||
+            node is MethodDeclaration ||
+            node is VariableDeclaration ||
+            node is FunctionDeclaration ||
+            node is ConstructorDeclaration ||
+            node is EnumDeclaration ||
+            node is EnumConstantDeclaration ||
+            node is FunctionTypeAlias ||
+            node is ClassTypeAlias) &&
+        node.name != null) {
       return node.name;
     } else if (node is DeclaredIdentifier) {
       return node.identifier;
@@ -179,7 +222,8 @@ class ASTVisitor extends GeneralizingAstVisitor {
     }
   }
 
-  void _addReferenceAndDeclaration(e.Reference reference, e.Declaration declaration) {
+  void _addReferenceAndDeclaration(
+      e.Reference reference, e.Declaration declaration) {
     if (parsedData.files[reference.location.file] == null) {
       parsedData.files[reference.location.file] = new Set();
     }

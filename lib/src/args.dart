@@ -10,8 +10,7 @@ abstract class Args {
 
   final ArgParser parser;
 
-  Args(this._args) :
-      this.parser = new ArgParser() {
+  Args(this._args) : this.parser = new ArgParser() {
     parser.addFlag("help", help: "Show help.", negatable: false);
   }
 
@@ -70,7 +69,8 @@ class CrossdartArgs extends Args {
   }
 
   CrossdartArgs(List<String> args) : super(args) {
-    parser.addOption(Config.INPUT, help: "Path where the project is located at. Required.");
+    parser.addOption(Config.INPUT,
+        help: "Path where the project is located at. Required.");
     parser.addOption(Config.OUTPUT, help: "Output path");
     parser.addOption(Config.HOSTED_URL, help: "Output format");
     parser.addOption(Config.DART_SDK, help: "Output format");

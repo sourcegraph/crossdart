@@ -7,7 +7,6 @@ class Cache {
   Map<String, String> _fileContents = {};
   Map<String, SplayTreeMap<int, int>> _lineNumbers = {};
 
-
   String fileContents(String file) {
     if (_fileContents[file] == null) {
       _fileContents[file] = new File(file).readAsStringSync();
@@ -78,7 +77,6 @@ class Cache {
       return "\n";
     }
   }
-
 }
 
 var cache = new Cache();

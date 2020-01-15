@@ -1,4 +1,5 @@
 library crossdart.non_semver_version;
+
 import 'package:pub_semver/pub_semver.dart' as ps;
 
 class Version implements ps.Version {

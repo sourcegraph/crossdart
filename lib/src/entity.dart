@@ -5,7 +5,14 @@ import 'package:crossdart/src/cache.dart';
 import 'package:crossdart/src/util.dart';
 
 enum EntityKind {
-  CLASS, METHOD, LOCAL_VARIABLE, FUNCTION, PROPERTY_ACCESSOR, CONSTRUCTOR, FIELD, FUNCTION_TYPE_ALIAS,
+  CLASS,
+  METHOD,
+  LOCAL_VARIABLE,
+  FUNCTION,
+  PROPERTY_ACCESSOR,
+  CONSTRUCTOR,
+  FIELD,
+  FUNCTION_TYPE_ALIAS,
   TOP_LEVEL_VARIABLE
 }
 
@@ -43,16 +50,17 @@ abstract class Entity {
     }
   }
 
-  Entity(this.location, {this.name, this.contextName, this.offset, this.end, this.kind, this.id});
+  Entity(this.location,
+      {this.name, this.contextName, this.offset, this.end, this.kind, this.id});
 
   int get hashCode => hash([this.runtimeType, location, name, offset, end]);
 
   bool operator ==(other) {
-    return (other.runtimeType == this.runtimeType)
-      && location == other.location
-      && name == other.name
-      && offset == other.offset
-      && end == other.end;
+    return (other.runtimeType == this.runtimeType) &&
+        location == other.location &&
+        name == other.name &&
+        offset == other.offset &&
+        end == other.end;
   }
 
   String toString() {
@@ -65,12 +73,28 @@ abstract class Entity {
 }
 
 class Declaration extends Entity {
-  Declaration(Location location, {String name, String contextName, int offset, int end, EntityKind kind, int id})
-      : super(location, name: name, contextName: contextName, offset: offset, end: end, kind: kind, id: id);
+  Declaration(Location location,
+      {String name,
+      String contextName,
+      int offset,
+      int end,
+      EntityKind kind,
+      int id})
+      : super(location,
+            name: name,
+            contextName: contextName,
+            offset: offset,
+            end: end,
+            kind: kind,
+            id: id);
 }
+
 class Import extends Declaration {
-  Import(Location location, {String name, int id}) : super(location, name: name, id: id);
+  Import(Location location, {String name, int id})
+      : super(location, name: name, id: id);
 }
+
 class Reference extends Entity {
-  Reference(Location location, {String name, int offset, int end, int id}) : super(location, name: name, offset: offset, end: end, id: id);
+  Reference(Location location, {String name, int offset, int end, int id})
+      : super(location, name: name, offset: offset, end: end, id: id);
 }

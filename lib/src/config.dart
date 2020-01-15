@@ -26,17 +26,17 @@ class Config {
   static const String URL_PATH_PREFIX = "url-path-prefix";
   static const String OUTPUT_FORMAT = "output-format";
 
-  Config._({
-    this.dartSdk,
-    this.input,
-    this.output,
-    this.hostedUrl,
-    this.urlPathPrefix,
-    this.outputFormat,
-    this.pubCachePath});
+  Config._(
+      {this.dartSdk,
+      this.input,
+      this.output,
+      this.hostedUrl,
+      this.urlPathPrefix,
+      this.outputFormat,
+      this.pubCachePath});
 
-  static Future<Config> build({
-      String dartSdk,
+  static Future<Config> build(
+      {String dartSdk,
       String input,
       String output,
       String hostedUrl,
@@ -46,8 +46,15 @@ class Config {
     outputFormat ??= OutputFormat.HTML;
     String pubCachePath;
     if (input != dartSdk) {
-      var packagesDiscovery = (await packages_discovery.loadPackagesFile(new Uri.file(path.join(input, ".packages")))).asMap();
-      pubCachePath = new File.fromUri(packagesDiscovery.values.first).parent.parent.parent.parent.path;
+      var packagesDiscovery = (await packages_discovery
+              .loadPackagesFile(new Uri.file(path.join(input, ".packages"))))
+          .asMap();
+      pubCachePath = new File.fromUri(packagesDiscovery.values.first)
+          .parent
+          .parent
+          .parent
+          .parent
+          .path;
     }
     return new Config._(
         dartSdk: dartSdk,
@@ -78,11 +85,12 @@ class Config {
   }
 
   DartSdk get sdk {
-    return new FolderBasedDartSdk(PhysicalResourceProvider.INSTANCE, PhysicalResourceProvider.INSTANCE.getResource(dartSdk));
+    return new FolderBasedDartSdk(PhysicalResourceProvider.INSTANCE,
+        PhysicalResourceProvider.INSTANCE.getResource(dartSdk));
   }
 
-  Config copy({
-      String dartSdk,
+  Config copy(
+      {String dartSdk,
       String input,
       String output,
       String hostedUrl,

@@ -8,7 +8,11 @@ import 'package:path/path.dart' as p;
 import 'package:crossdart/src/version.dart';
 
 enum PackageSource { GIT, HOSTED, SDK }
-final Map<String, PackageSource> packageSourceMapping = {"GIT": PackageSource.GIT, "HOSTED": PackageSource.HOSTED, "SDK": PackageSource.SDK};
+final Map<String, PackageSource> packageSourceMapping = {
+  "GIT": PackageSource.GIT,
+  "HOSTED": PackageSource.HOSTED,
+  "SDK": PackageSource.SDK
+};
 
 class PackageInfo implements Comparable<PackageInfo> {
   final String name;
@@ -19,9 +23,8 @@ class PackageInfo implements Comparable<PackageInfo> {
 
   int get hashCode => hash([name, version]);
 
-  bool operator ==(other) => other is PackageInfo
-      && name == other.name
-      && version == other.version;
+  bool operator ==(other) =>
+      other is PackageInfo && name == other.name && version == other.version;
 
   int compareTo(PackageInfo other) {
     if (name == other.name) {
@@ -32,11 +35,13 @@ class PackageInfo implements Comparable<PackageInfo> {
   }
 
   String absolutePath(Config config) {
-    return p.join(config.output, config.urlPathPrefix, name, version.toString());
+    return p.join(
+        config.output, config.urlPathPrefix, name, version.toString());
   }
 
   String logPath(Config config) {
-    return p.join(config.output, config.urlPathPrefix, name, version.toString(), "log.txt");
+    return p.join(config.output, config.urlPathPrefix, name, version.toString(),
+        "log.txt");
   }
 
   String logUrl(Config config) {
@@ -58,8 +63,7 @@ class PackageInfo implements Comparable<PackageInfo> {
   }
 
   PackageInfo update({String name, Version version, PackageSource source}) {
-    return new PackageInfo(
-        name == null ? this.name : name,
+    return new PackageInfo(name == null ? this.name : name,
         version == null ? this.version : version,
         source: source == null ? this.source : source);
   }
@@ -72,20 +76,26 @@ class PackageInfo implements Comparable<PackageInfo> {
         return p.join(config.sdkPackagesRoot, dirname);
       }
     } else {
-      Directory directory = new Directory(config.hostedPackagesRoot).listSync().firstWhere((entity) {
-        return p.basename(entity.path).toLowerCase() == "${name}-${version}".toLowerCase()
-            || p.basename(entity.path).replaceAll("+", "-").toLowerCase() == "${name}-${version}".toLowerCase();
+      Directory directory = new Directory(config.hostedPackagesRoot)
+          .listSync()
+          .firstWhere((entity) {
+        return p.basename(entity.path).toLowerCase() ==
+                "${name}-${version}".toLowerCase() ||
+            p.basename(entity.path).replaceAll("+", "-").toLowerCase() ==
+                "${name}-${version}".toLowerCase();
       }, orElse: () => null);
       if (directory == null) {
-         directory = new Directory(config.gitPackagesRoot).listSync().firstWhere((entity) {
-          return p.basename(entity.path).toLowerCase() == "${name}-${version}".toLowerCase()
-             || p.basename(entity.path).replaceAll("+", "-").toLowerCase() == "${name}-${version}".toLowerCase();
+        directory = new Directory(config.gitPackagesRoot).listSync().firstWhere(
+            (entity) {
+          return p.basename(entity.path).toLowerCase() ==
+                  "${name}-${version}".toLowerCase() ||
+              p.basename(entity.path).replaceAll("+", "-").toLowerCase() ==
+                  "${name}-${version}".toLowerCase();
         }, orElse: () => null);
       }
       return directory == null ? null : directory.resolveSymbolicLinksSync();
     }
   }
-
 
   Map<String, String> toMap() {
     return {"name": name, "version": version.toString()};

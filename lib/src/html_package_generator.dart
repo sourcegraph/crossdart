@@ -24,14 +24,16 @@ class HtmlPackageGenerator {
   Config _config;
   Map<String, Package> _packagesByFiles = {};
 
-  HtmlPackageGenerator(this._config, Iterable<Package> packages, this._parsedData) :
-    _packages = packages,
-    _packagesByFiles = packages.fold({}, (Map<String, Package> memo, Package package) {
-      package.absolutePaths.forEach((file) {
-        memo[file] = package;
-      });
-      return memo;
-    });
+  HtmlPackageGenerator(
+      this._config, Iterable<Package> packages, this._parsedData)
+      : _packages = packages,
+        _packagesByFiles =
+            packages.fold({}, (Map<String, Package> memo, Package package) {
+          package.absolutePaths.forEach((file) {
+            memo[file] = package;
+          });
+          return memo;
+        });
 
   Future<Null> generateProject() async {
     _packagesByFiles.forEach((absolutePath, package) {
@@ -39,8 +41,10 @@ class HtmlPackageGenerator {
       if (entities == null) {
         entities = new Set();
       }
-      var location = new Location(_config, package, package.relativePath(absolutePath));
-      entities = entities.where((e) => e.offset != null && e.end != null).toSet();
+      var location =
+          new Location(_config, package, package.relativePath(absolutePath));
+      entities =
+          entities.where((e) => e.offset != null && e.end != null).toSet();
       var path = p.join(_config.output, location.writePath);
       var directory = new Directory(p.dirname(path));
       directory.createSync(recursive: true);
@@ -51,7 +55,12 @@ class HtmlPackageGenerator {
 
     String redirectUrl;
     if (_packages.length == 1 && _packages.first is Sdk) {
-      redirectUrl = this._parsedData.files[_packages.first.absolutePath("lib/core/list.dart")].first.location.htmlPath;
+      redirectUrl = this
+          ._parsedData
+          .files[_packages.first.absolutePath("lib/core/list.dart")]
+          .first
+          .location
+          .htmlPath;
     } else {
       redirectUrl = this._parsedData.references.keys.first.location.htmlPath;
     }
@@ -73,9 +82,15 @@ class HtmlPackageGenerator {
     """);
 
     new Directory(p.join(_config.output, "assets")).createSync(recursive: true);
-    for (var filename in ["code.js", "highlight.pack.js", "style.css", "favicon.png"]) {
+    for (var filename in [
+      "code.js",
+      "highlight.pack.js",
+      "style.css",
+      "favicon.png"
+    ]) {
       var resource = new r.Resource("package:crossdart/resources/${filename}");
-      new File(p.join(_config.output, "assets", filename)).writeAsBytesSync(await resource.readAsBytes());
+      new File(p.join(_config.output, "assets", filename))
+          .writeAsBytesSync(await resource.readAsBytes());
     }
   }
 
@@ -104,7 +119,8 @@ class HtmlPackageGenerator {
   }
 
   String _headerContent(String absolutePath, Package package) {
-    var location = new Location(_config, package, package.relativePath(absolutePath));
+    var location =
+        new Location(_config, package, package.relativePath(absolutePath));
     var baseList = new List.filled(location.path.split("/").length - 1, "..");
     return """
       <!doctype html>
@@ -147,8 +163,10 @@ class HtmlPackageGenerator {
     """;
   }
 
-  void _writeContent(String absolutePath, Set<Entity> entities, RandomAccessFile file, Package package) {
-    _logger.info("Building content of ${absolutePath} (${package.packageInfo.dirname})");
+  void _writeContent(String absolutePath, Set<Entity> entities,
+      RandomAccessFile file, Package package) {
+    _logger.info(
+        "Building content of ${absolutePath} (${package.packageInfo.dirname})");
     file.writeStringSync(_headerContent(absolutePath, package));
     if (cache.numberOfLines(absolutePath) > 0) {
       file.writeStringSync("<div class='wrapper'><pre class='lines'>");
@@ -158,25 +176,29 @@ class HtmlPackageGenerator {
       file.writeStringSync("</pre>");
       file.writeStringSync("<pre class='code'>");
       String fileContent = cache.fileContents(absolutePath);
-      List<Entity> entitiesList = entities.toList()..sort((a, b) => Comparable.compare(a.offset, b.offset));
+      List<Entity> entitiesList = entities.toList()
+        ..sort((a, b) => Comparable.compare(a.offset, b.offset));
 
       var lastOffset = 0;
       var currentLine = 1;
       Map<int, List<Entity>> stack = {};
-      file.writeStringSync("<span id='code-line-${currentLine}' class='code-line'>");
+      file.writeStringSync(
+          "<span id='code-line-${currentLine}' class='code-line'>");
       currentLine += 1;
       String newlineChar = cache.getNewlineChar(fileContent);
 
       Entity entity = entitiesList.isNotEmpty ? entitiesList.removeAt(0) : null;
       int nextNewlinePos = fileContent.indexOf(newlineChar, lastOffset);
 
-      while(entity != null || stack.isNotEmpty || nextNewlinePos != null) {
+      while (entity != null || stack.isNotEmpty || nextNewlinePos != null) {
         int entityStartPos = entity != null ? entity.offset : null;
         nextNewlinePos = fileContent.indexOf(newlineChar, lastOffset);
         nextNewlinePos = nextNewlinePos == -1 ? null : nextNewlinePos;
-        int entityEndPos = stack.isNotEmpty ? stack.keys.reduce(math.min) : null;
+        int entityEndPos =
+            stack.isNotEmpty ? stack.keys.reduce(math.min) : null;
 
-        var positions = [entityStartPos, nextNewlinePos, entityEndPos].where((i) => i != null);
+        var positions = [entityStartPos, nextNewlinePos, entityEndPos]
+            .where((i) => i != null);
         if (positions.isNotEmpty) {
           int nextStop = positions.reduce(math.min);
           var string = fileContent.substring(lastOffset, nextStop);
@@ -195,14 +217,16 @@ class HtmlPackageGenerator {
               }
               stack[entity.end].add(entity);
               file.writeStringSync(_addEntityStart(entity));
-              entity = entitiesList.isNotEmpty ? entitiesList.removeAt(0) : null;
+              entity =
+                  entitiesList.isNotEmpty ? entitiesList.removeAt(0) : null;
             }
             lastOffset = nextStop;
           } else {
             if (nextNewlinePos == nextStop) {
               file.writeStringSync("</span>");
               file.writeStringSync("\n");
-              file.writeStringSync("<span id='code-line-${currentLine}' class='code-line'>");
+              file.writeStringSync(
+                  "<span id='code-line-${currentLine}' class='code-line'>");
               currentLine += 1;
               lastOffset = nextStop + newlineChar.length;
             } else {
@@ -210,7 +234,8 @@ class HtmlPackageGenerator {
             }
           }
         } else {
-          file.writeStringSync(sanitizer.convert(fileContent.substring(lastOffset)));
+          file.writeStringSync(
+              sanitizer.convert(fileContent.substring(lastOffset)));
         }
       }
       file.writeStringSync("</span></pre></div>");
@@ -225,7 +250,8 @@ class HtmlPackageGenerator {
     </ul>""";
   }
 
-  String _buildFileTreeContents(Package package, Iterable<Object> fileTreeMap, Iterable<String> currentPathParts) {
+  String _buildFileTreeContents(Package package, Iterable<Object> fileTreeMap,
+      Iterable<String> currentPathParts) {
     var sortedFileTreeMap = fileTreeMap.toList();
     sortedFileTreeMap.sort((a, b) {
       if (a is Map && b is! Map) {
@@ -242,7 +268,8 @@ class HtmlPackageGenerator {
     return sortedFileTreeMap.map((node) {
       if (node is Map) {
         var key = node.keys.first;
-        var isOpen = currentPathParts.isNotEmpty && currentPathParts.first == key;
+        var isOpen =
+            currentPathParts.isNotEmpty && currentPathParts.first == key;
         return """<li class="filetree--item filetree--item__directory${isOpen ? ' is-open' : ''}">
           <span class="filetree--item--info"><span class="filetree--item--fold-icon"></span><span class="filetree--item--title">${key}</span></span>
           <ul class="filetree--children">
@@ -250,7 +277,8 @@ class HtmlPackageGenerator {
           </ul>
         </li>""";
       } else {
-        var isCurrent = currentPathParts.isNotEmpty && currentPathParts.first == p.basename(node);
+        var isCurrent = currentPathParts.isNotEmpty &&
+            currentPathParts.first == p.basename(node);
         var location = new Location(_config, package, node);
         var name = isCurrent
             ? p.basename(node)
@@ -271,7 +299,9 @@ class HtmlPackageGenerator {
         if (i == parts.length - 1) {
           cursor.add(path);
         } else {
-          var existingMap = cursor.firstWhere((i) => i is Map && i.containsKey(part), orElse: () => null);
+          var existingMap = cursor.firstWhere(
+              (i) => i is Map && i.containsKey(part),
+              orElse: () => null);
           if (existingMap == null) {
             existingMap = {part: []};
             cursor.add(existingMap);

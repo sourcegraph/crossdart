@@ -26,7 +26,8 @@ abstract class Package implements Comparable<Package> {
     return environment.packagesByFiles[filePath];
   }
 
-  Package update({Config config, PackageInfo packageInfo, Iterable<String> paths});
+  Package update(
+      {Config config, PackageInfo packageInfo, Iterable<String> paths});
 
   String get name => packageInfo.name;
   Version get version => packageInfo.version;
@@ -52,7 +53,9 @@ abstract class Package implements Comparable<Package> {
   }
 
   String relativePath(String absolutePath) {
-    return absolutePath.replaceFirst(lib, "").replaceFirst(new RegExp(r"^/"), "");
+    return absolutePath
+        .replaceFirst(lib, "")
+        .replaceFirst(new RegExp(r"^/"), "");
   }
 
   String toString() {
@@ -60,28 +63,21 @@ abstract class Package implements Comparable<Package> {
   }
 
   Map<String, Object> toMap() {
-    return {
-        "name": name,
-        "version": version,
-        "source": source,
-        "paths": paths};
+    return {"name": name, "version": version, "source": source, "paths": paths};
   }
 
   int get hashCode => hash([packageInfo]);
-  bool operator ==(other) => other is Package && packageInfo == other.packageInfo;
+  bool operator ==(other) =>
+      other is Package && packageInfo == other.packageInfo;
 
   int compareTo(Package other) {
     return packageInfo.compareTo(other.packageInfo);
   }
 }
 
-
 class Sdk extends Package {
-  Sdk(
-      Config config,
-      PackageInfo packageInfo,
-      Iterable<String> paths) :
-      super(config, packageInfo, paths);
+  Sdk(Config config, PackageInfo packageInfo, Iterable<String> paths)
+      : super(config, packageInfo, paths);
 
   String get lib {
     if (packageInfo.version.toString() == config.sdk.sdkVersion) {
@@ -91,7 +87,11 @@ class Sdk extends Package {
     }
   }
 
-  Sdk update({Config config, PackageInfo packageInfo, String description, Iterable<String> paths}) {
+  Sdk update(
+      {Config config,
+      PackageInfo packageInfo,
+      String description,
+      Iterable<String> paths}) {
     return new Sdk(
         config != null ? config : this.config,
         packageInfo != null ? packageInfo : this.packageInfo,
@@ -100,16 +100,17 @@ class Sdk extends Package {
 }
 
 class Project extends Package {
-  Project(
-      Config config,
-      PackageInfo packageInfo,
-      Iterable<String> paths) :
-      super(config, packageInfo, paths);
+  Project(Config config, PackageInfo packageInfo, Iterable<String> paths)
+      : super(config, packageInfo, paths);
 
   String get _root => config.input;
   String get lib => p.join(_root, "lib");
 
-  Project update({Config config, PackageInfo packageInfo, String description, Iterable<String> paths}) {
+  Project update(
+      {Config config,
+      PackageInfo packageInfo,
+      String description,
+      Iterable<String> paths}) {
     return new Project(
         config != null ? config : this.config,
         packageInfo != null ? packageInfo : this.packageInfo,
@@ -117,13 +118,9 @@ class Project extends Package {
   }
 }
 
-
 class CustomPackage extends Package {
-  CustomPackage(
-      Config config,
-      PackageInfo packageInfo,
-      Iterable<String> paths) :
-      super(config, packageInfo, paths);
+  CustomPackage(Config config, PackageInfo packageInfo, Iterable<String> paths)
+      : super(config, packageInfo, paths);
 
   String get _packagesRoot {
     if (source == PackageSource.GIT) {
@@ -137,7 +134,8 @@ class CustomPackage extends Package {
 
   String get lib => p.join(_root, "lib");
 
-  CustomPackage update({Config config, PackageInfo packageInfo, Iterable<String> paths}) {
+  CustomPackage update(
+      {Config config, PackageInfo packageInfo, Iterable<String> paths}) {
     return new CustomPackage(
         config != null ? config : this.config,
         packageInfo != null ? packageInfo : this.packageInfo,
@@ -153,14 +151,18 @@ Future<Package> buildFromFileSystem(Config config, PackageInfo packageInfo) {
   }
 }
 
-Future<Sdk> buildSdkFromFileSystem(Config config, PackageInfo packageInfo) async {
+Future<Sdk> buildSdkFromFileSystem(
+    Config config, PackageInfo packageInfo) async {
   // TODO This throws an exception, need to fix. Hard-code it for now.
   // String lib = packageInfo.getDirectoryInPubCache(config);
   String lib = "/usr/local/Cellar/dart/2.7.0";
   var source = PackageSource.SDK;
 
   print("Opening dir $lib (TODO un-hard-code this, see lib/src/package.dart)");
-  var paths = new Directory(lib).listSync(recursive: true).where(_isDartFile).map((file) {
+  var paths = new Directory(lib)
+      .listSync(recursive: true)
+      .where(_isDartFile)
+      .map((file) {
     return file.path.replaceAll(lib, "").replaceFirst(new RegExp(r"^/"), "");
   });
 
@@ -170,20 +172,32 @@ Future<Sdk> buildSdkFromFileSystem(Config config, PackageInfo packageInfo) async
 Project buildProjectFromFileSystem(Config config) {
   var lib = p.join(config.input, "lib");
 
-  var paths = new Directory(lib).listSync(recursive: true).where(_isDartFile).map((file) {
+  var paths = new Directory(lib)
+      .listSync(recursive: true)
+      .where(_isDartFile)
+      .map((file) {
     return file.path.replaceAll(lib, "").replaceFirst(new RegExp(r"^/"), "");
   });
 
-  var pubspec = loadYaml(new File(p.join(config.input, "pubspec.yaml")).readAsStringSync());
+  var pubspec = loadYaml(
+      new File(p.join(config.input, "pubspec.yaml")).readAsStringSync());
 
-  return new Project(config, new PackageInfo(pubspec["name"], Version.parse(pubspec["version"] ?? "0.0.1")), paths);
+  return new Project(
+      config,
+      new PackageInfo(
+          pubspec["name"], Version.parse(pubspec["version"] ?? "0.0.1")),
+      paths);
 }
 
 bool _isDartFile(FileSystemEntity f) {
-  return f is File && !p.basename(f.path).startsWith("._") && f.path.endsWith(".dart");
+  return f is File &&
+      !p.basename(f.path).startsWith("._") &&
+      f.path.endsWith(".dart");
 }
 
-Future<CustomPackage> buildCustomPackageFromFileSystem(Config config, PackageInfo packageInfo, [String lib]) async {
+Future<CustomPackage> buildCustomPackageFromFileSystem(
+    Config config, PackageInfo packageInfo,
+    [String lib]) async {
   if (lib == null) {
     var root = packageInfo.getDirectoryInPubCache(config);
     lib = p.join(root, "lib");
@@ -198,7 +212,10 @@ Future<CustomPackage> buildCustomPackageFromFileSystem(Config config, PackageInf
   final libDirectory = new Directory(lib);
   Iterable<String> paths;
   if (libDirectory.existsSync()) {
-    paths = new Directory(lib).listSync(recursive: true).where(_isDartFile).map((file) {
+    paths = new Directory(lib)
+        .listSync(recursive: true)
+        .where(_isDartFile)
+        .map((file) {
       return file.path.replaceAll(lib, "").replaceFirst(new RegExp(r"^/"), "");
     });
   } else {
