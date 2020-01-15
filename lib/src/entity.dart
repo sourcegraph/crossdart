@@ -98,3 +98,8 @@ class Reference extends Entity {
   Reference(Location location, {String name, int offset, int end, int id})
       : super(location, name: name, offset: offset, end: end, id: id);
 }
+
+class TypeInfo extends Entity {
+  TypeInfo(Location location, {String name, int offset, int end, int id})
+      : super(location, name: name, offset: offset, end: end, id: id);
+}

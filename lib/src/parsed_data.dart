@@ -5,6 +5,9 @@ import 'package:crossdart/src/entity.dart';
 class ParsedData {
   Map<Declaration, Set<Reference>> declarations = {};
   Map<Reference, Declaration> references = {};
+  Map<Declaration, TypeInfo> typeInfos = {};
+  // Can contain `TypeInfo`s that do not appear in the `typeInfos` map above
+  // Example: the `var` in "var x = 5;" can have a `TypeInfo` of "int", but there is no declaration for it
   Map<String, Set<Entity>> files = {};
 
   ParsedData copy() {

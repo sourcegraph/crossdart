@@ -229,7 +229,9 @@ class ASTVisitor extends GeneralizingAstVisitor {
   }
 
   void _addReferenceAndDeclaration(
-      e.Reference reference, e.Declaration declaration) {
+      e.Reference reference, e.Declaration declaration
+      // , e.TypeInfo typeInfo
+      ) {
     if (parsedData.files[reference.location.file] == null) {
       parsedData.files[reference.location.file] = new Set();
     }
@@ -241,6 +243,9 @@ class ASTVisitor extends GeneralizingAstVisitor {
     parsedData.files[declaration.location.file].add(declaration);
 
     if (parsedData.declarations[declaration] == null) {
+      // New declaration, set type info for it
+      // Maybe this should get populated elsewhere in this file instead of here?
+      // parsedData.typeInfos[declaration] = typeInfo;
       parsedData.declarations[declaration] = new Set();
     }
     parsedData.declarations[declaration].add(reference);
