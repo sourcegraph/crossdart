@@ -111,6 +111,12 @@ class ASTVisitor extends GeneralizingAstVisitor {
         Element element = node.staticElement;
         Element decl; // declaration of element
 
+        if (element is VariableElement) {
+          print('\tVisiting VariableElement: $element');
+          var type = element.type;
+          print('\tStatic VariableElement Type: $type');
+        }
+
         AstNode toAstNode(Element element) {
           var session = element.session;
           var parsedLib = session.getParsedLibraryByElement(element.library);
