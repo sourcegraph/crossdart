@@ -61,7 +61,8 @@ Future<void> withinProject(Future<String> Function(Map<String, Object>) emit,
 Future<void> withinDocuments(
     Future<String> Function(Map<String, Object>) emit,
     Iterable<String> documents,
-    Future<Map<String, List<String>>> Function() inside) async {
+    Future<Map<String, List<String>>> Function(Map<String, String>)
+        inside) async {
   Map<String, String> docToID = {};
   await Future.forEach(documents, (String doc) async {
     docToID[doc] = await emit({
@@ -78,7 +79,7 @@ Future<void> withinDocuments(
       "scope": 'document',
     });
   });
-  Map<String, List<String>> docToRanges = await inside();
+  Map<String, List<String>> docToRanges = await inside(docToID);
   await Future.forEach(documents, (String doc) async {
     await emit({
       "type": 'edge',
@@ -94,6 +95,21 @@ Future<void> withinDocuments(
       "scope": 'document',
     });
   });
+}
+
+Map<String, Object> range(Entity entity) {
+  return {
+    "type": "vertex",
+    "label": "range",
+    "start": {
+      "line": entity.lineNumber != null ? entity.lineNumber : 0,
+      "character": entity.lineOffset != null ? entity.lineOffset : 0,
+    },
+    "end": {
+      "line": entity.lineNumber != null ? entity.lineNumber : 0,
+      "character": (entity.lineOffset != null ? entity.lineOffset : 0) + 5,
+    },
+  };
 }
 
 class LsifGenerator {
@@ -118,25 +134,22 @@ class LsifGenerator {
         "toolInfo": {"name": 'crossdart', "args": [], "version": 'dev'}
       });
       await withinProject(emit, () async {
-        await withinDocuments(emit, _parsedData.files.keys, () async {
-          Map<Declaration, String> declarationToId = new Map();
-          List<Declaration> declarations = _parsedData.files.values
-              .expand<Entity>((entries) => entries)
-              .expand<Declaration>(
-                  (entry) => entry is Declaration ? [entry] : [])
-              .toList();
-          List<Reference> references = _parsedData.files.values
-              .expand<Entity>((entries) => entries)
-              .expand<Reference>((entry) => entry is Reference ? [entry] : [])
-              .toList();
-          Map<String, List<String>> docToRanges = Map.fromIterable(declarations,
-              key: (declaration) => declaration.location.file,
-              value: (key) => []);
+        var docs = _parsedData.files.keys;
+        await withinDocuments(emit, docs, (documentToId) async {
+          Map<String, List<String>> docToRanges =
+              Map.fromIterable(docs, key: (doc) => doc, value: (key) => []);
 
-          await Future.forEach<Declaration>(declarations, (declaration) async {
+          await Future.forEach<Declaration>(_parsedData.declarations.keys,
+              (declaration) async {
             print(
                 "DEF ${declaration.location.file}:${declaration.lineNumber.toString()} ${declaration.name}");
 
+            var rangeId = await emit(range(declaration));
+            docToRanges[declaration.location.file].add(rangeId);
+            var resultSetId = await emit({
+              "type": "vertex",
+              "label": "resultSet",
+            });
             var hoverId = await emit({
               "type": "vertex",
               "label": "hoverResult",
@@ -147,9 +160,42 @@ class LsifGenerator {
                 }
               }
             });
-            var resultSetId = await emit({
+            var definitionId = await emit({
               "type": "vertex",
-              "label": "resultSet",
+              "label": "definitionResult",
+            });
+            var referenceId = await emit({
+              "type": "vertex",
+              "label": "referenceResult",
+            });
+            List<String> referenceRangeIds = [];
+            await Future.forEach(_parsedData.declarations[declaration],
+                (reference) async {
+              var referenceRangeId = await emit(range(reference));
+              await emit({
+                "type": "edge",
+                "label": "next",
+                "outV": referenceRangeId,
+                "inV": resultSetId
+              });
+              referenceRangeIds.add(referenceRangeId);
+              docToRanges[declaration.location.file].add(referenceRangeId);
+            });
+            await emit({
+              "type": "edge",
+              "label": "item",
+              "outV": referenceId,
+              "inVs": referenceRangeIds,
+              "document": documentToId[declaration.location.file],
+              "property": "references",
+            });
+            await emit({
+              "type": "edge",
+              "label": "item",
+              "outV": referenceId,
+              "inVs": [rangeId],
+              "document": documentToId[declaration.location.file],
+              "property": "definitions",
             });
 
             await emit({
@@ -158,24 +204,28 @@ class LsifGenerator {
               "outV": resultSetId,
               "inV": hoverId
             });
-            var rangeId = await emit({
-              "type": "vertex",
-              "label": "range",
-              "start": {
-                "line":
-                    declaration.lineNumber != null ? declaration.lineNumber : 0,
-                "character":
-                    declaration.lineOffset != null ? declaration.lineOffset : 0,
-              },
-              "end": {
-                "line":
-                    declaration.lineNumber != null ? declaration.lineNumber : 0,
-                "character": (declaration.lineOffset != null
-                        ? declaration.lineOffset
-                        : 0) +
-                    5,
-              },
+
+            await emit({
+              "type": "edge",
+              "label": "textDocument/definition",
+              "outV": resultSetId,
+              "inV": definitionId,
             });
+            await emit({
+              "type": "edge",
+              "label": "item",
+              "outV": definitionId,
+              "inVs": [rangeId],
+              "document": documentToId[declaration.location.file],
+            });
+
+            await emit({
+              "type": "edge",
+              "label": "textDocument/references",
+              "outV": resultSetId,
+              "inV": referenceId
+            });
+
             await emit({
               "type": "edge",
               "label": "next",
@@ -183,9 +233,6 @@ class LsifGenerator {
               "inV": resultSetId
             });
 
-            docToRanges[declaration.location.file].add(rangeId);
-
-            declarationToId.putIfAbsent(declaration, () => resultSetId);
             // String relativePath = _environment.package is Sdk ?
             //   entities.first.location.package.relativePath(absolutePath) :
             //   path.join("lib", entities.first.location.package.relativePath(absolutePath));
