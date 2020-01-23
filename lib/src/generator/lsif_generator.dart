@@ -36,23 +36,23 @@ Future<String> Function(Map<String, Object>) mkEmit(IOSink sink) {
 
 Future<void> withinProject(Future<String> Function(Map<String, Object>) emit,
     Future Function() inside) async {
-  await emit({
-    "data": 'project',
-    "type": 'vertex',
-    "label": 'event',
-    "kind": 'begin',
-    "scope": 'project',
-  });
-  await emit({
+  var projectId = await emit({
     "type": 'vertex',
     "label": 'project',
     "kind": 'dart',
   });
+  await emit({
+    "type": 'vertex',
+    "label": '\$event',
+    "kind": 'begin',
+    "scope": 'project',
+    "data": projectId,
+  });
   await inside();
   await emit({
-    "data": 'project',
+    "data": projectId,
     "type": 'vertex',
-    "label": 'event',
+    "label": '\$event',
     "kind": 'end',
     "scope": 'project',
   });
@@ -61,28 +61,24 @@ Future<void> withinProject(Future<String> Function(Map<String, Object>) emit,
 Future<void> withinDocuments(
     Future<String> Function(Map<String, Object>) emit,
     Iterable<String> documents,
-    Future<List<String>> Function(String) inside) async {
+    Future<Map<String, List<String>>> Function() inside) async {
   Map<String, String> docToID = {};
   await Future.forEach(documents, (String doc) async {
     docToID[doc] = await emit({
       "type": 'vertex',
       "label": 'document',
-      // TODO needs to be relative to project root
-      "uri": 'file:///' + doc,
+      "uri": 'file://' + doc,
       "languageId": 'dart',
     });
     await emit({
       "data": docToID[doc],
       "type": 'vertex',
-      "label": 'event',
+      "label": '\$event',
       "kind": 'begin',
       "scope": 'document',
     });
   });
-  Map<String, List<String>> docToRanges = {};
-  await Future.forEach(documents, (String doc) async {
-    docToRanges[doc] = await inside(doc);
-  });
+  Map<String, List<String>> docToRanges = await inside();
   await Future.forEach(documents, (String doc) async {
     await emit({
       "type": 'edge',
@@ -93,7 +89,7 @@ Future<void> withinDocuments(
     await emit({
       "data": docToID[doc],
       "type": 'vertex',
-      "label": 'event',
+      "label": '\$event',
       "kind": 'end',
       "scope": 'document',
     });
@@ -116,23 +112,80 @@ class LsifGenerator {
         "id": 'meta',
         "type": 'vertex',
         "label": 'metaData',
-        "projectRoot": 'file:///',
+        "projectRoot": "file://${_environment.config.output}",
         "version": '0.4.0',
         "positionEncoding": 'utf-16',
         "toolInfo": {"name": 'crossdart', "args": [], "version": 'dev'}
       });
       await withinProject(emit, () async {
-        await withinDocuments(emit, _parsedData.files.keys, (String doc) async {
-          await Future.forEach(_parsedData.files.entries,
-              (MapEntry<String, Set<Entity>> entry) async {
-            var absolutePath = doc;
-            var entities = _parsedData.files[doc];
-            await emit({
+        await withinDocuments(emit, _parsedData.files.keys, () async {
+          Map<Declaration, String> declarationToId = new Map();
+          List<Declaration> declarations = _parsedData.files.values
+              .expand<Entity>((entries) => entries)
+              .expand<Declaration>(
+                  (entry) => entry is Declaration ? [entry] : [])
+              .toList();
+          List<Reference> references = _parsedData.files.values
+              .expand<Entity>((entries) => entries)
+              .expand<Reference>((entry) => entry is Reference ? [entry] : [])
+              .toList();
+          Map<String, List<String>> docToRanges = Map.fromIterable(declarations,
+              key: (declaration) => declaration.location.file,
+              value: (key) => []);
+
+          await Future.forEach<Declaration>(declarations, (declaration) async {
+            print(
+                "DEF ${declaration.location.file}:${declaration.lineNumber.toString()} ${declaration.name}");
+
+            var hoverId = await emit({
               "type": "vertex",
-              "label": "document",
-              "uri": 'lalala',
-              "languageId": 'dart'
+              "label": "hoverResult",
+              "result": {
+                'contents': {
+                  'kind': 'markdown',
+                  'value': "Hovering over: ${declaration.name}",
+                }
+              }
             });
+            var resultSetId = await emit({
+              "type": "vertex",
+              "label": "resultSet",
+            });
+
+            await emit({
+              "type": "edge",
+              "label": "textDocument/hover",
+              "outV": resultSetId,
+              "inV": hoverId
+            });
+            var rangeId = await emit({
+              "type": "vertex",
+              "label": "range",
+              "start": {
+                "line":
+                    declaration.lineNumber != null ? declaration.lineNumber : 0,
+                "character":
+                    declaration.lineOffset != null ? declaration.lineOffset : 0,
+              },
+              "end": {
+                "line":
+                    declaration.lineNumber != null ? declaration.lineNumber : 0,
+                "character": (declaration.lineOffset != null
+                        ? declaration.lineOffset
+                        : 0) +
+                    5,
+              },
+            });
+            await emit({
+              "type": "edge",
+              "label": "next",
+              "outV": rangeId,
+              "inV": resultSetId
+            });
+
+            docToRanges[declaration.location.file].add(rangeId);
+
+            declarationToId.putIfAbsent(declaration, () => resultSetId);
             // String relativePath = _environment.package is Sdk ?
             //   entities.first.location.package.relativePath(absolutePath) :
             //   path.join("lib", entities.first.location.package.relativePath(absolutePath));
@@ -143,7 +196,7 @@ class LsifGenerator {
             //   result[relativePath]["declarations"] = _getDeclarationsValues(pubspecLockPath, entities, _environment.package is Sdk).toList();
             // }
           });
-          return [];
+          return docToRanges;
         });
       });
     });
