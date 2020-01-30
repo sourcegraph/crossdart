@@ -1,5 +1,6 @@
 import 'dart:html';
 
+/** Just hello world! */
 String greetingWords = 'Hello world!';
 
 void main() {
