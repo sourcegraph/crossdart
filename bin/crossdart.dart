@@ -50,10 +50,6 @@ Future main(args) async {
       hostedUrl: results[Config.HOSTED_URL] ?? "https://www.crossdart.info",
       urlPathPrefix: results[Config.URL_PATH_PREFIX] ?? "p",
       outputFormat: outputFormat);
-  if (config.sdk.sdkVersion == "0") {
-    throw new Exception(
-        "${config.dartSdk} is not a valid Dart SDK. It should have a `version` file at the root. When installed via brew on macOS, it's /usr/local/Cellar/dart/<version>/libexec");
-  }
   logging.initialize();
 
   var environment = await buildEnvironment(config);

@@ -21,6 +21,7 @@ class Config {
   final String urlPathPrefix;
   final OutputFormat outputFormat;
   final String pubCachePath;
+  final DartSdk sdk;
 
   static const String DART_SDK = "dart-sdk";
   static const String INPUT = "input";
@@ -36,7 +37,8 @@ class Config {
       this.hostedUrl,
       this.urlPathPrefix,
       this.outputFormat,
-      this.pubCachePath});
+      this.pubCachePath,
+      this.sdk});
 
   static Future<Config> build(
       {String dartSdk,
@@ -47,6 +49,14 @@ class Config {
       OutputFormat outputFormat}) async {
     input ??= Directory.current.path;
     outputFormat ??= OutputFormat.HTML;
+    // Defaults to $root in $root/bin/dart, the executable running this script
+    dartSdk ??= new File(Platform.resolvedExecutable).parent.parent.path;
+    DartSdk sdk = new FolderBasedDartSdk(PhysicalResourceProvider.INSTANCE,
+        PhysicalResourceProvider.INSTANCE.getResource(dartSdk));
+    if (sdk.sdkVersion == "0") {
+      throw new Exception(
+          "${dartSdk} is not a valid Dart SDK (set by --dart-sdk). It should have a `version` file at the root. When installed via brew on macOS, it's /usr/local/Cellar/dart/<version>/libexec");
+    }
     String pubCachePath;
     if (input != dartSdk) {
       var packagesDiscovery = (await packages_discovery
@@ -66,7 +76,8 @@ class Config {
         hostedUrl: hostedUrl,
         urlPathPrefix: urlPathPrefix,
         outputFormat: outputFormat,
-        pubCachePath: pubCachePath);
+        pubCachePath: pubCachePath,
+        sdk: sdk);
   }
 
   String get packagesPath {
@@ -85,11 +96,6 @@ class Config {
 
   String get sdkPackagesRoot {
     return path.join(pubCachePath, "sdk");
-  }
-
-  DartSdk get sdk {
-    return new FolderBasedDartSdk(PhysicalResourceProvider.INSTANCE,
-        PhysicalResourceProvider.INSTANCE.getResource(dartSdk));
   }
 
   Config copy(
