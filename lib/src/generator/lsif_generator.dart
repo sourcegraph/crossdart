@@ -107,7 +107,8 @@ Map<String, Object> range(Entity entity) {
     },
     "end": {
       "line": entity.lineNumber != null ? entity.lineNumber : 0,
-      "character": (entity.lineOffset != null ? entity.lineOffset : 0) + 5,
+      "character": (entity.lineOffset != null ? entity.lineOffset : 0) +
+          entity.name.length,
     },
   };
 }
@@ -141,6 +142,10 @@ class LsifGenerator {
 
           await Future.forEach<Declaration>(_parsedData.declarations.keys,
               (declaration) async {
+            if (declaration.name == null) {
+              return;
+            }
+
             print(
                 "DEF ${declaration.location.file}:${declaration.lineNumber.toString()} ${declaration.name}");
 
