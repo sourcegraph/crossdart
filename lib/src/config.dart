@@ -11,8 +11,11 @@ import 'dart:async';
 enum OutputFormat { JSON, HTML, GITHUB, LSIF }
 
 class Config {
+  /** Absolute path to the Dart SDK, comes from --dart-sdk */
   final String dartSdk;
+  /** Absolute path to the project to analyze, comes from --input */
   final String input;
+  /** Absolute path to the output directory, comes from --output, defaults to --input */
   final String output;
   final String hostedUrl;
   final String urlPathPrefix;
