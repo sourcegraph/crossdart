@@ -194,6 +194,15 @@ Future<void> emitReferences(emit, String resultSetId, String rangeId,
   });
 }
 
+String toMarkdown(String docstring) {
+  return docstring
+      .replaceAll(new RegExp(r'^/\*\*\n', multiLine: true), '')
+      .replaceAll(new RegExp(r'^/\*\* ', multiLine: true), '')
+      .replaceAll(new RegExp(r'^ \*$', multiLine: true), '')
+      .replaceAll(new RegExp(r'^ \* ', multiLine: true), '')
+      .replaceAll(new RegExp(r'\*/$', multiLine: true), '');
+}
+
 class LsifGenerator {
   final Environment _environment;
   final ParsedData _parsedData;
@@ -238,7 +247,7 @@ class LsifGenerator {
             });
 
             if (declaration.docstring != null) {
-              emitHover(emit, declaration.docstring, resultSetId);
+              emitHover(emit, toMarkdown(declaration.docstring), resultSetId);
             }
             emitDefinition(emit, resultSetId, rangeId,
                 documentToId[declaration.location.file]);
