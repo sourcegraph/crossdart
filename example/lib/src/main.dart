@@ -10,7 +10,20 @@ void main() {
   print(config);
 }
 
-/** Holds information about a foo. */
+/**
+ * Holds information about a foo. Code `${}`:
+ *
+ * '''dart
+ * var x = "hi";
+ * print(x)
+ * '''
+ *
+ * Links:
+ *
+ * * [Dart Cookbook](https://www.dartlang.org/docs/cookbook/#strings)
+ *   for String examples and recipes.
+ * * [Dart Up and Running](https://www.dartlang.org/docs/dart-up-and-running/ch03.html#strings-and-regular-expressions)
+ */
 class Config {
   /** Absolute path to the output directory, comes from --output, defaults to --input */
   final String output;
