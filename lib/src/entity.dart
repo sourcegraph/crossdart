@@ -24,6 +24,7 @@ abstract class Entity {
   final int offset;
   final int end;
   final EntityKind kind;
+  final String docstring;
   final int id;
 
   int _lineNumber;
@@ -51,7 +52,13 @@ abstract class Entity {
   }
 
   Entity(this.location,
-      {this.name, this.contextName, this.offset, this.end, this.kind, this.id});
+      {this.name,
+      this.contextName,
+      this.offset,
+      this.end,
+      this.kind,
+      this.docstring,
+      this.id});
 
   int get hashCode => hash([this.runtimeType, location, name, offset, end]);
 
@@ -79,6 +86,7 @@ class Declaration extends Entity {
       int offset,
       int end,
       EntityKind kind,
+      String docstring,
       int id})
       : super(location,
             name: name,
@@ -86,6 +94,7 @@ class Declaration extends Entity {
             offset: offset,
             end: end,
             kind: kind,
+            docstring: docstring,
             id: id);
 }
 

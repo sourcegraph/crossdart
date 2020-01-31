@@ -168,6 +168,7 @@ class ASTVisitor extends GeneralizingAstVisitor {
                 contextName: contextName,
                 offset: declarationToken.offset,
                 end: declarationToken.end,
+                docstring: decl.documentationComment,
                 kind: kind);
 
             //print("Saved");

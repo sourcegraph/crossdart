@@ -161,7 +161,7 @@ class LsifGenerator {
               "result": {
                 'contents': {
                   'kind': 'markdown',
-                  'value': "Hovering over: ${declaration.name}",
+                  'value': declaration.docstring,
                 }
               }
             });
