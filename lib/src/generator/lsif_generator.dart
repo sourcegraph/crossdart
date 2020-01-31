@@ -113,6 +113,87 @@ Map<String, Object> range(Entity entity) {
   };
 }
 
+Future<void> emitHover(emit, docstring, resultSetId) async {
+  var hoverId = await emit({
+    "type": "vertex",
+    "label": "hoverResult",
+    "result": {
+      'contents': {
+        'kind': 'markdown',
+        'value': docstring,
+      }
+    }
+  });
+  await emit({
+    "type": "edge",
+    "label": "textDocument/hover",
+    "outV": resultSetId,
+    "inV": hoverId
+  });
+}
+
+Future<void> emitDefinition(emit, resultSetId, rangeId, documentId) async {
+  var definitionId = await emit({
+    "type": "vertex",
+    "label": "definitionResult",
+  });
+  await emit({
+    "type": "edge",
+    "label": "textDocument/definition",
+    "outV": resultSetId,
+    "inV": definitionId,
+  });
+  await emit({
+    "type": "edge",
+    "label": "item",
+    "outV": definitionId,
+    "inVs": [rangeId],
+    "document": documentId,
+  });
+}
+
+Future<void> emitReferences(emit, String resultSetId, String rangeId,
+    Set references, String documentId, List documentRanges) async {
+  var referenceId = await emit({
+    "type": "vertex",
+    "label": "referenceResult",
+  });
+  List<String> referenceRangeIds = [];
+  await Future.forEach(references, (reference) async {
+    var referenceRangeId = await emit(range(reference));
+    await emit({
+      "type": "edge",
+      "label": "next",
+      "outV": referenceRangeId,
+      "inV": resultSetId
+    });
+    referenceRangeIds.add(referenceRangeId);
+    documentRanges.add(referenceRangeId);
+  });
+  await emit({
+    "type": "edge",
+    "label": "item",
+    "outV": referenceId,
+    "inVs": referenceRangeIds,
+    "document": documentId,
+    "property": "references",
+  });
+  await emit({
+    "type": "edge",
+    "label": "item",
+    "outV": referenceId,
+    "inVs": [rangeId],
+    "document": documentId,
+    "property": "definitions",
+  });
+  await emit({
+    "type": "edge",
+    "label": "textDocument/references",
+    "outV": resultSetId,
+    "inV": referenceId
+  });
+}
+
 class LsifGenerator {
   final Environment _environment;
   final ParsedData _parsedData;
@@ -155,81 +236,17 @@ class LsifGenerator {
               "type": "vertex",
               "label": "resultSet",
             });
-            var hoverId = await emit({
-              "type": "vertex",
-              "label": "hoverResult",
-              "result": {
-                'contents': {
-                  'kind': 'markdown',
-                  'value': declaration.docstring,
-                }
-              }
-            });
-            var definitionId = await emit({
-              "type": "vertex",
-              "label": "definitionResult",
-            });
-            var referenceId = await emit({
-              "type": "vertex",
-              "label": "referenceResult",
-            });
-            List<String> referenceRangeIds = [];
-            await Future.forEach(_parsedData.declarations[declaration],
-                (reference) async {
-              var referenceRangeId = await emit(range(reference));
-              await emit({
-                "type": "edge",
-                "label": "next",
-                "outV": referenceRangeId,
-                "inV": resultSetId
-              });
-              referenceRangeIds.add(referenceRangeId);
-              docToRanges[declaration.location.file].add(referenceRangeId);
-            });
-            await emit({
-              "type": "edge",
-              "label": "item",
-              "outV": referenceId,
-              "inVs": referenceRangeIds,
-              "document": documentToId[declaration.location.file],
-              "property": "references",
-            });
-            await emit({
-              "type": "edge",
-              "label": "item",
-              "outV": referenceId,
-              "inVs": [rangeId],
-              "document": documentToId[declaration.location.file],
-              "property": "definitions",
-            });
 
-            await emit({
-              "type": "edge",
-              "label": "textDocument/hover",
-              "outV": resultSetId,
-              "inV": hoverId
-            });
-
-            await emit({
-              "type": "edge",
-              "label": "textDocument/definition",
-              "outV": resultSetId,
-              "inV": definitionId,
-            });
-            await emit({
-              "type": "edge",
-              "label": "item",
-              "outV": definitionId,
-              "inVs": [rangeId],
-              "document": documentToId[declaration.location.file],
-            });
-
-            await emit({
-              "type": "edge",
-              "label": "textDocument/references",
-              "outV": resultSetId,
-              "inV": referenceId
-            });
+            emitHover(emit, declaration.docstring, resultSetId);
+            emitDefinition(emit, resultSetId, rangeId,
+                documentToId[declaration.location.file]);
+            emitReferences(
+                emit,
+                resultSetId,
+                rangeId,
+                _parsedData.declarations[declaration],
+                documentToId[declaration.location.file],
+                docToRanges[declaration.location.file]);
 
             await emit({
               "type": "edge",
@@ -237,16 +254,6 @@ class LsifGenerator {
               "outV": rangeId,
               "inV": resultSetId
             });
-
-            // String relativePath = _environment.package is Sdk ?
-            //   entities.first.location.package.relativePath(absolutePath) :
-            //   path.join("lib", entities.first.location.package.relativePath(absolutePath));
-            // result[relativePath] = {
-            //   "references": _getReferencesValues(pubspecLockPath, entities, _environment.package is Sdk, isForGithub).toList()
-            // };
-            // if (isForGithub) {
-            //   result[relativePath]["declarations"] = _getDeclarationsValues(pubspecLockPath, entities, _environment.package is Sdk).toList();
-            // }
           });
           return docToRanges;
         });
