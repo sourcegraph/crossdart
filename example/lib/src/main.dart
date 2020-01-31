@@ -13,10 +13,8 @@ void main() {
 /**
  * Holds information about a foo. Code `${}`:
  *
- * '''dart
- * var x = "hi";
- * print(x)
- * '''
+ *     var x = "hi";
+ *     print(x)
  *
  * Links:
  *
