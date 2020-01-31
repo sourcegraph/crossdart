@@ -237,7 +237,9 @@ class LsifGenerator {
               "label": "resultSet",
             });
 
-            emitHover(emit, declaration.docstring, resultSetId);
+            if (declaration.docstring != null) {
+              emitHover(emit, declaration.docstring, resultSetId);
+            }
             emitDefinition(emit, resultSetId, rangeId,
                 documentToId[declaration.location.file]);
             emitReferences(
