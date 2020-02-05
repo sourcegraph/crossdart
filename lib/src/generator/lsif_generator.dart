@@ -153,13 +153,13 @@ Future<void> emitDefinition(emit, resultSetId, rangeId, documentId) async {
 }
 
 Future<void> emitReferences(emit, String resultSetId, String rangeId,
-    Set references, String documentId, List documentRanges) async {
+    Set<Reference> references, String documentId, List documentRanges) async {
   var referenceId = await emit({
     "type": "vertex",
     "label": "referenceResult",
   });
   List<String> referenceRangeIds = [];
-  await Future.forEach(references, (reference) async {
+  await Future.forEach<Reference>(references, (reference) async {
     var referenceRangeId = await emit(range(reference));
     await emit({
       "type": "edge",
