@@ -213,6 +213,10 @@ class LsifGenerator {
   final ParsedData _parsedData;
   LsifGenerator(this._environment, this._parsedData);
 
+  bool isFileInProject(String file) {
+    return file.startsWith(_environment.config.output);
+  }
+
   void generate() async {
     _logger.info("Generating LSIF output");
     new Directory(_environment.config.output).createSync(recursive: true);
@@ -230,7 +234,7 @@ class LsifGenerator {
         "toolInfo": {"name": 'crossdart', "args": [], "version": 'dev'}
       });
       await withinProject(emit, () async {
-        var docs = _parsedData.files.keys;
+        var docs = _parsedData.files.keys.toList().where(isFileInProject);
         await withinDocuments(emit, docs, (documentToId) async {
           Map<String, List<String>> docToRanges =
               Map.fromIterable(docs, key: (doc) => doc, value: (key) => []);
@@ -238,6 +242,10 @@ class LsifGenerator {
           await Future.forEach<Declaration>(_parsedData.declarations.keys,
               (declaration) async {
             if (declaration.name == null) {
+              return;
+            }
+            if (!isFileInProject(declaration.location.file)) {
+              // TODO monikers
               return;
             }
 
