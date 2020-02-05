@@ -253,9 +253,9 @@ class LsifGenerator {
             if (declaration.docstring != null) {
               emitHover(emit, toMarkdown(declaration.docstring), resultSetId);
             }
-            emitDefinition(emit, resultSetId, rangeId,
+            await emitDefinition(emit, resultSetId, rangeId,
                 documentToId[declaration.location.file]);
-            emitReferences(
+            await emitReferences(
                 emit,
                 resultSetId,
                 rangeId,
