@@ -236,8 +236,12 @@ class LsifGenerator {
               return;
             }
 
-            print(
-                "DEF ${declaration.location.file}:${declaration.lineNumber.toString()} ${declaration.name}");
+            _logger.info(
+                "    Definition    ${declaration.location.file}:${declaration.lineNumber.toString()}:${declaration.lineOffset} symbol ${declaration.name}");
+            _parsedData.declarations[declaration].forEach((reference) {
+              _logger.info(
+                  "        Reference ${reference.location.file}:${reference.lineNumber.toString()}:${reference.lineOffset}");
+            });
 
             var rangeId = await emit(range(declaration));
             docToRanges[declaration.location.file].add(rangeId);
@@ -258,6 +262,7 @@ class LsifGenerator {
                 _parsedData.declarations[declaration],
                 documentToId[declaration.location.file],
                 docToRanges[declaration.location.file]);
+            _logger.info("");
 
             await emit({
               "type": "edge",
