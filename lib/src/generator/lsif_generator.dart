@@ -156,41 +156,55 @@ Future<void> emitReferences(
     emit,
     String resultSetId,
     String rangeId,
-    Set<Reference> references,
+    Set<Reference> allReferences,
     String documentId,
-    Map<String, List<String>> docToRanges) async {
+    Map<String, List<String>> docToRanges,
+    Map<String, String> docToID) async {
   var referenceId = await emit({
     "type": "vertex",
     "label": "referenceResult",
   });
-  List<String> referenceRangeIds = [];
-  await Future.forEach<Reference>(references, (reference) async {
-    var referenceRangeId = await emit(range(reference));
+
+  var referencesByDoc = new Map<String, List<Reference>>();
+  for (var reference in allReferences) {
+    referencesByDoc.putIfAbsent(reference.location.file, () => []);
+    referencesByDoc[reference.location.file].add(reference);
+  }
+
+  for (var entry in referencesByDoc.entries) {
+    var currentDoc = entry.key;
+    var currentDocReferences = entry.value;
+
+    List<String> referenceRangeIds = [];
+    await Future.forEach<Reference>(currentDocReferences, (reference) async {
+      var referenceRangeId = await emit(range(reference));
+      await emit({
+        "type": "edge",
+        "label": "next",
+        "outV": referenceRangeId,
+        "inV": resultSetId
+      });
+      referenceRangeIds.add(referenceRangeId);
+      docToRanges[reference.location.file].add(referenceRangeId);
+    });
     await emit({
       "type": "edge",
-      "label": "next",
-      "outV": referenceRangeId,
-      "inV": resultSetId
+      "label": "item",
+      "outV": referenceId,
+      "inVs": referenceRangeIds,
+      "document": docToID[currentDoc],
+      "property": "references",
     });
-    referenceRangeIds.add(referenceRangeId);
-    docToRanges[reference.location.file].add(referenceRangeId);
-  });
-  await emit({
-    "type": "edge",
-    "label": "item",
-    "outV": referenceId,
-    "inVs": referenceRangeIds,
-    "document": documentId,
-    "property": "references",
-  });
-  await emit({
-    "type": "edge",
-    "label": "item",
-    "outV": referenceId,
-    "inVs": [rangeId],
-    "document": documentId,
-    "property": "definitions",
-  });
+    await emit({
+      "type": "edge",
+      "label": "item",
+      "outV": referenceId,
+      "inVs": [rangeId],
+      "document": documentId,
+      "property": "definitions",
+    });
+  }
+
   await emit({
     "type": "edge",
     "label": "textDocument/references",
@@ -274,7 +288,8 @@ class LsifGenerator {
                 rangeId,
                 _parsedData.declarations[declaration],
                 documentToId[declaration.location.file],
-                docToRanges);
+                docToRanges,
+                documentToId);
             _logger.info("");
 
             await emit({
