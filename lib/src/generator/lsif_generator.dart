@@ -152,8 +152,13 @@ Future<void> emitDefinition(emit, resultSetId, rangeId, documentId) async {
   });
 }
 
-Future<void> emitReferences(emit, String resultSetId, String rangeId,
-    Set<Reference> references, String documentId, List documentRanges) async {
+Future<void> emitReferences(
+    emit,
+    String resultSetId,
+    String rangeId,
+    Set<Reference> references,
+    String documentId,
+    Map<String, List<String>> docToRanges) async {
   var referenceId = await emit({
     "type": "vertex",
     "label": "referenceResult",
@@ -168,7 +173,7 @@ Future<void> emitReferences(emit, String resultSetId, String rangeId,
       "inV": resultSetId
     });
     referenceRangeIds.add(referenceRangeId);
-    documentRanges.add(referenceRangeId);
+    docToRanges[reference.location.file].add(referenceRangeId);
   });
   await emit({
     "type": "edge",
@@ -261,7 +266,7 @@ class LsifGenerator {
                 rangeId,
                 _parsedData.declarations[declaration],
                 documentToId[declaration.location.file],
-                docToRanges[declaration.location.file]);
+                docToRanges);
             _logger.info("");
 
             await emit({
