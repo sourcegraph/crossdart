@@ -232,7 +232,7 @@ class LsifGenerator {
   }
 
   void generate() async {
-    _logger.info("Generating LSIF output");
+    _logger.fine("Generating LSIF output");
     new Directory(_environment.config.output).createSync(recursive: true);
     var file = new File(path.join(_environment.config.output, "dump.lsif"));
     var pubspecLockPath = path.join(_environment.config.input, "pubspec.lock");
@@ -263,10 +263,10 @@ class LsifGenerator {
               return;
             }
 
-            _logger.info(
+            _logger.fine(
                 "    Definition    ${declaration.location.file}:${declaration.lineNumber.toString()}:${declaration.lineOffset} symbol ${declaration.name}");
             _parsedData.declarations[declaration].forEach((reference) {
-              _logger.info(
+              _logger.fine(
                   "        Reference ${reference.location.file}:${reference.lineNumber.toString()}:${reference.lineOffset}");
             });
 
@@ -299,7 +299,7 @@ class LsifGenerator {
                 documentToId[declaration.location.file],
                 docToRanges,
                 documentToId);
-            _logger.info("");
+            _logger.fine("");
 
             await emit({
               "type": "edge",
