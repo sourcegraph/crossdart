@@ -111,7 +111,8 @@ class ASTVisitor extends GeneralizingAstVisitor {
         Element element = node.staticElement;
         Element decl; // declaration of element
 
-        if (element is VariableElement) {
+        var logVisits = false;
+        if (element is VariableElement && logVisits) {
           print('\tVisiting VariableElement: $element');
           var type = element.type;
           print('\tStatic VariableElement Type: $type');
