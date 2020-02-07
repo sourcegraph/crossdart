@@ -13,16 +13,18 @@ Required tools:
 Install dependencies:
 
 ```
+cd $HOME/your-dart-project
 pub get
 ```
 
 Run lsif-dart:
 
 ```
+cd $HOME
 git clone https://github.com/sourcegraph/lsif-dart
 cd lsif-dart
 pub get
-pub run crossdart --input <path to dir containing pubspec.yaml and lib/>
+pub run crossdart --input $HOME/your-dart-project
 ```
 
 ## Historical notes
