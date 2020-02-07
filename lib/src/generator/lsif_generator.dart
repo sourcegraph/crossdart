@@ -279,6 +279,15 @@ class LsifGenerator {
 
             if (declaration.docstring != null) {
               emitHover(emit, toMarkdown(declaration.docstring), resultSetId);
+            } else {
+              emitHover(
+                  emit,
+                  "```dart\n" +
+                      new File(declaration.location.file)
+                          .readAsStringSync()
+                          .split("\n")[declaration.lineNumber] +
+                      "\n```",
+                  resultSetId);
             }
             await emitDefinition(emit, resultSetId, rangeId,
                 documentToId[declaration.location.file]);
