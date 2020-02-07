@@ -22,7 +22,7 @@ Run lsif-dart:
 git clone https://github.com/sourcegraph/lsif-dart
 cd lsif-dart
 pub get
-pub run crossdart --input <path to dir containing pubspec.yaml and lib/> --output-format=lsif
+pub run crossdart --input <path to dir containing pubspec.yaml and lib/>
 ```
 
 ## Historical notes

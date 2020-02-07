@@ -37,7 +37,7 @@ Future main(args) async {
       outputFormat = OutputFormat.LSIF;
       break;
     default:
-      outputFormat = OutputFormat.GITHUB;
+      outputFormat = OutputFormat.LSIF;
       break;
   }
 
