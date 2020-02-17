@@ -3,7 +3,8 @@ on:
   - push
 jobs:
   build:
-    runs-on: google/dart:2.8
+    runs-on: ubuntu-latest
+    container: google/dart:2.7
     steps:
       - uses: actions/checkout@v1
       - name: Install dependencies
