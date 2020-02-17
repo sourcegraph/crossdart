@@ -2,7 +2,7 @@ name: LSIF
 on:
   - push
 jobs:
-  build:
+  index:
     runs-on: ubuntu-latest
     container: google/dart:2.7
     steps:
