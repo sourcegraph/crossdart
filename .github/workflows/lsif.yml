@@ -18,3 +18,4 @@ jobs:
           file: dump.lsif
           endpoint: https://sourcegraph.com
           github_token: ${{ secrets.GITHUB_TOKEN }}
+
