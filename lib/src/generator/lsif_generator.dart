@@ -228,7 +228,7 @@ class LsifGenerator {
   LsifGenerator(this._environment, this._parsedData);
 
   bool isFileInProject(String file) {
-    return file.startsWith(_environment.config.output);
+    return file.startsWith(_environment.config.input);
   }
 
   void generate() async {
@@ -242,7 +242,7 @@ class LsifGenerator {
         "id": 'meta',
         "type": 'vertex',
         "label": 'metaData',
-        "projectRoot": "file://${_environment.config.output}",
+        "projectRoot": "file://${_environment.config.input}",
         "version": '0.4.0',
         "positionEncoding": 'utf-16',
         "toolInfo": {"name": 'crossdart', "args": [], "version": 'dev'}
